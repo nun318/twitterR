@@ -1,0 +1,94 @@
+install.packages("tidytext")
+install.packages("stringr")
+install.packages("twitteR")
+install.packages("purrr")
+install.packages("tidytext")
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("lubridate")
+install.packages("scales")
+install.packages("broom")
+install.packages("ggplot2")
+install.packages("textdata")
+
+library(stringr)
+library(twitteR)
+library(purrr)
+library(tidytext)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(scales)
+library(broom)
+library(ggplot2)
+library(textdata)
+
+install.packages(c("devtools", "rjson", "bit64", "httr","tidytext","dplyr","tidyverse","tibble"))
+library(c("devtools", "rjson", "bit64", "httr","tidytext","dplyr","tidyverse","tibble"))
+install.packages("twitteR")
+library(twitteR)
+setup_twitter_oauth("dRh5yTVd28nbNmTW5VAZhMHvx", "VZ8rQWosyA4sxn0ajwM8TAMAJWFMcQzNYjO7F6NVDH6yNKFZvw","762550150732484608-Cw7VWZgHzIkSuThc79qSD61jNORPxEf","t8lrgZg2NXBURJChkQ5ijoD4qVqpwzamUK3HoKN0D4D9w")
+
+fn_twitter <- searchTwitter("#Houston",n=1000,lang="en")
+
+fn_twitter_df <- twListToDF(fn_twitter) # Convert to data frame
+obamatweets<- userTimeline("potus44", n = 3200)
+obamatweets_df <- tbl_df(map_df(obamatweets, as.data.frame))
+write.csv(obamatweets_df, "obamatweets.csv")
+
+library(tidyverse)
+library(twitteR)
+fn_twitter <- searchTwitter("#Houston",n=1000,lang="en")
+
+fn_twitter_df <- twListToDF(fn_twitter) # Convert to data frame
+
+
+tweet_words <- fn_twitter_df %>% select(id, text) %>% unnest_tokens(word,text)
+
+tweet_words %>% count(word,sort=T) %>% slice(1:20) %>% 
+  ggplot(aes(x = reorder(word, 
+    n, function(n) -n), y = n)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 60, 
+    hjust = 1)) + xlab("")
+my_stop_words <- stop_words %>% select(-lexicon) %>% 
+  bind_rows(data.frame(word = c("https", "t.co", "rt", "amp","4yig9gzh5t","fyy2ceydhi","78","fakenews")))
+
+tweet_words_interesting <- tweet_words %>% anti_join(my_stop_words)
+
+tweet_words_interesting %>% group_by(word) %>% tally(sort=TRUE) %>% slice(1:25) %>% ggplot(aes(x = reorder(word, 
+    n, function(n) -n), y = n)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 60, 
+    hjust = 1)) + xlab("")
+    
+ #install textdata package
+    
+bing_lex <- get_sentiments("nrc")
+
+fn_sentiment <- tweet_words_interesting %>% left_join(bing_lex)
+
+fn_sentiment %>% filter(!is.na(sentiment)) %>% group_by(sentiment) %>% summarise(n=n())
+
+library(tidyverse)
+library(twitteR)
+tb_twitter <- searchTwitter("travelban",n=1000)
+
+tb_twitter_df <- twListToDF(tb_twitter) # Convert to data frame
+
+tweet_words <- tb_twitter_df %>% select(id, text) %>% unnest_tokens(word,text)
+
+tweet_words %>% count(word,sort=T) %>% slice(1:20) %>% 
+  ggplot(aes(x = reorder(word, 
+    n, function(n) -n), y = n)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 60, 
+    hjust = 1)) + xlab("")
+ 
+ my_stop_words <- stop_words %>% select(-lexicon) %>% 
+  bind_rows(data.frame(word = c("https", "t.co", "rt", "amp","travelban")))
+
+tweet_words_interesting <- tweet_words %>% anti_join(my_stop_words)
+
+tweet_words_interesting %>% group_by(word) %>% tally(sort=TRUE) %>% slice(1:25) %>% ggplot(aes(x = reorder(word, 
+    n, function(n) -n), y = n)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 60, 
+    hjust = 1)) + xlab("")
+ bing_lex <- get_sentiments("bing")
+
+fn_sentiment <- tweet_words_interesting %>% left_join(bing_lex)
+
+fn_sentiment %>% filter(!is.na(sentiment)) %>% group_by(sentiment) %>% summarise(n=n())
